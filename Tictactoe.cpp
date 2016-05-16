@@ -1,5 +1,8 @@
 #include "Tictactoe.h"
 
+#include <time.h>
+#include <stdlib.h>
+
 #include <iostream>
 
 namespace {
@@ -71,12 +74,14 @@ Tictactoe::Tictactoe() :
 void Tictactoe::setMode(int player) {
   switch(player) {
   case 1:
+    _mode = ONE_PLAYER;
     break;
   case 2:
     _mode = TWO_PLAYER;
     break;
   default:
-    _mode = INVALID;
+    std::cout << "Invalid mode. Default mode of two player mode\n";
+    _mode = TWO_PLAYER;
     break;
   }
 }
@@ -93,10 +98,72 @@ void Tictactoe::printBoard() const {
 
 void Tictactoe::play() {
   if (_mode == ONE_PLAYER) {
-    std::cout << "Ooops! Not yet supported\n";
+    playOnePlayerMode();
   } else if (_mode == TWO_PLAYER) {
     playTwoPlayerMode();
   }
+}
+
+void Tictactoe::playOnePlayerMode() {
+  std::string player1 = getPlayerName();
+  Mark mark1 = getPlayerMark(player1);
+
+  std::string player2 = "Computer";
+  Mark mark2 = mark1 == Mark::CROSS ? Mark::NAUGHT : Mark::CROSS;
+
+  int turn = 1;
+  getComputerMove(mark2);
+  printBoard();
+  while (!isGameOver()) {
+    if (!(turn & 1)) {
+      getComputerMove(mark2);
+    } else {
+      getPlayerMove(player1, mark1);
+    }
+    ++turn;
+    printBoard();
+   }
+  std::string winner;
+  if (_winnerMark == mark1) {
+    winner = player1;
+  } else if (_winnerMark == mark2) {
+    winner = player2;
+  }
+  report(winner);
+}
+
+void Tictactoe::getComputerMove(const Mark& mark) {
+  int row = -1;
+  int column = -1;
+  while (!isValidMove(row, column)) {
+    std::pair<int, int> position = getRowAndColumn();
+    row = position.first;
+    column = position.second;
+  }
+  std::cout << "Computer move\n";
+  std::cout << "Row: " << row << std::endl;
+  std::cout << "Column: " << column << std::endl;
+  _board[row][column] = mark;
+  ++_moveCount;
+}
+
+std::pair<int, int> Tictactoe::getRowAndColumn() {
+  srand(time(NULL));
+  int row = rand() % 3;
+  int column = rand() % 3;
+  return std::make_pair(row, column);
+}
+
+bool Tictactoe::isValidMove(int row, int column) {
+  bool validMove = true;
+  if (row < 0 || row >= _row ||
+      column < 0 || column >= _column) {
+    validMove = false;
+  } else if (_board[row][column] != Mark::BLANK) {
+    validMove = false;
+  }
+
+  return validMove;
 }
 
 void Tictactoe::playTwoPlayerMode() {
@@ -150,7 +217,10 @@ Tictactoe::Mark Tictactoe::getPlayerMark(const std::string& player) {
 }
 
 bool Tictactoe::isGameOver() {
-  if (isADraw() || isAWin()) {
+  if (isAWin()) {
+    return true;
+  }
+  if (isADraw()) {
     return true;
   }
   return false;
@@ -243,14 +313,7 @@ void Tictactoe::getPlayerMove(const std::string& player,
     std::cout << "Enter column: ";
     std::cin >> column;
 
-    if (row < 0 || row >= _row ||
-        column < 0 || column >= _column) {
-      std::cout << "Enter a valid move.\n";
-    } else if (_board[row][column] != Mark::BLANK) {
-      std::cout << "Cell is not empty. Enter a valid move.\n";
-    } else {
-      validMove = true;
-    }
+    validMove = isValidMove(row, column);
   }
   
   ++_moveCount;

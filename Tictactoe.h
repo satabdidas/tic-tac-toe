@@ -3,6 +3,7 @@
 
 #include <vector>
 #include <string>
+#include <utility>
 
 class Tictactoe {
  public:
@@ -44,7 +45,11 @@ class Tictactoe {
   bool isAWinForALine(int row, int column, int dRow, int dColumn);
   void getPlayerMove(const std::string& player,
                      const Mark& mark);
+  void playOnePlayerMode();
+  void getComputerMove(const Mark& mark);
+  std::pair<int, int> getRowAndColumn();
   void report(const std::string& winner);
+  bool isValidMove(int row, int column);
 
   int         _row;
   int         _column;
