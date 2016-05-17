@@ -33,7 +33,6 @@ class Tictactoe {
   using Marks = std::vector<Mark>;
   using Board = std::vector<Marks>; 
 
-  void playTwoPlayerMode();
   std::string getPlayerName();
   Mark getPlayerMark(const std::string& player);
   bool isGameOver();
@@ -45,17 +44,18 @@ class Tictactoe {
   bool isAWinForALine(int row, int column, int dRow, int dColumn);
   void getPlayerMove(const std::string& player,
                      const Mark& mark);
-  void playOnePlayerMode();
   void getComputerMove(const Mark& mark);
   std::pair<int, int> getRowAndColumn();
   void report(const std::string& winner);
   bool isValidMove(int row, int column);
+  Mark whoseTurn();
 
   int         _row;
   int         _column;
   int         _k;
   int         _moveCount;
   Mark        _winnerMark;
+  Mark        _currentMark;
   Mode        _mode;
   Board       _board;
 };
