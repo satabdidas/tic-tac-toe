@@ -259,21 +259,16 @@ bool Tictactoe::isAWinForDiagonal() {
       return true;
     }
   }
-  // Check for first column
+  // Check for first column and last column
   for (int row = 1; row <= _row - _k; ++row) {
-    if (isAWinForALine(row, 0, 1, 1)) {
+    if (isAWinForALine(row, 0, 1, 1) ||
+        isAWinForALine(row, _column - 1, 1, -1)) {
       return true;
     }
   }
   // Check for first row positive slope
   for (int col = _column - 1; col >= _column -_k + 1; --col) {
     if (isAWinForALine(0, col, 1, -1)) {
-      return true;
-    }
-  }
-  // Check for last column
-  for (int row = 1; row <= _row - _k; ++row) {
-    if (isAWinForALine(row, _column - 1, 1, -1)) {
       return true;
     }
   }
