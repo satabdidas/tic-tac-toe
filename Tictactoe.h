@@ -13,13 +13,15 @@ class Tictactoe {
     enum MarkEnum {NAUGHT, CROSS, BLANK};
     Mark();
     Mark(const Mark::MarkEnum& mark);
-    Mark(char val);
+    Mark(const std::string& val);
     bool operator == (const Mark& mark) const;
     bool operator != (const Mark& mark) const;
     char getChar() const;
   private:
     MarkEnum  _mark;
   };
+
+  using Player = std::pair<std::string, Mark>;
 
   void setMode(int mode);
   void printBoard() const;
@@ -35,26 +37,28 @@ class Tictactoe {
 
   std::string getPlayerName();
   Mark getPlayerMark(const std::string& player);
-  bool isGameOver();
+  std::pair<bool, bool> isGameOver();
   bool isADraw();
   bool isAWin();
   bool isAWinForRow();
   bool isAWinForColumn();
   bool isAWinForDiagonal();
   bool isAWinForALine(int row, int column, int dRow, int dColumn);
-  void getPlayerMove(const std::string& player,
-                     const Mark& mark);
-  void getComputerMove(const Mark& mark);
+  void getPlayerMove(const Player& player);
+  void getComputerMove();
   std::pair<int, int> getRowAndColumn();
-  void report(const std::string& winner);
+  void report(std::pair<bool, bool>& status,
+              const Player& player1,
+              const Player& player2);
   bool isValidMove(int row, int column);
   Mark whoseTurn();
+  Player getPlayer1();
+  Player getPlayer2(const Mark& mark1);
 
   int         _row;
   int         _column;
   int         _k;
   int         _moveCount;
-  Mark        _winnerMark;
   Mark        _currentMark;
   Mode        _mode;
   Board       _board;

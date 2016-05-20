@@ -22,19 +22,13 @@ Tictactoe::Mark::Mark(const Mark::MarkEnum& mark) {
   _mark = mark;
 }
 
-Tictactoe::Mark::Mark(char val) {
-  switch(val) {
-  case 'x':
-  case 'X':
+Tictactoe::Mark::Mark(const std::string& val) {
+  if (val.compare("x") == 0 || val.compare("X") == 0) {
     _mark = CROSS;
-    break;
-  case 'o':
-  case 'O':
+  } else if (val.compare("x") == 0 || val.compare("X") == 0) {
     _mark = NAUGHT;
-    break;
-  default:
+  } else {
     _mark = BLANK;
-    break;
   }
 }
 
@@ -66,7 +60,7 @@ Tictactoe::Tictactoe() :
   _column(3),
   _k(3),
   _moveCount(0),
-  _winnerMark(Mark::BLANK),
+  _currentMark(Mark::BLANK),
   _mode(TWO_PLAYER),
   _board(_row, Marks(_column, Mark()))
 {}
@@ -104,43 +98,49 @@ Tictactoe::Mark Tictactoe::whoseTurn() {
   }
 }
 
-void Tictactoe::play() {
-  std::string player1 = "Computer";
+Tictactoe::Player Tictactoe::getPlayer1() {
+ std::string name1 = "Computer";
   Mark mark1(Mark::CROSS);
   if (_mode == TWO_PLAYER) {
-    player1 = getPlayerName();
-    mark1 = getPlayerMark(player1);
+    name1 = getPlayerName();
+    mark1 = getPlayerMark(name1);
   }
+  return make_pair(name1, mark1);
+}
 
-  std::string player2 = getPlayerName();
+Tictactoe::Player Tictactoe::getPlayer2(const Mark& mark1) {
+  std::string name2 = getPlayerName();
   Mark mark2(mark1 == Mark::CROSS ? Mark::NAUGHT : Mark::CROSS);
+  return std::make_pair(name2, mark2);
+}
 
-  _currentMark = mark2;
+void Tictactoe::play() {
+  Player player1 = getPlayer1();
+  Player player2 = getPlayer2(player1.second);
+
+  _currentMark = player2.second;
   printBoard();
-  while (!isGameOver()) {
+  std::pair<bool, bool> status(false, false);
+  while (!status.first && !status.second) {
     _currentMark = whoseTurn();
-    if (mark1 == _currentMark) {
+    if (player1.second == _currentMark) {
       if (_mode == ONE_PLAYER) {
-        getComputerMove(mark1);
+        getComputerMove();
       } else {
-        getPlayerMove(player1, mark1);
+        getPlayerMove(player1);
       }
     } else {
-      getPlayerMove(player2, mark2);
+      getPlayerMove(player2);
     }
     ++_moveCount;
     printBoard();
+    
+    status = isGameOver();
   }
-  std::string winner;
-  if (_winnerMark == mark1) {
-    winner = player1;
-  } else if (_winnerMark == mark2) {
-    winner = player2;
-  }
-  report(winner);
+  report(status, player1, player2);
 }
 
-void Tictactoe::getComputerMove(const Mark& mark) {
+void Tictactoe::getComputerMove() {
   int row = -1;
   int column = -1;
   while (!isValidMove(row, column)) {
@@ -151,7 +151,7 @@ void Tictactoe::getComputerMove(const Mark& mark) {
   std::cout << "Computer move\n";
   std::cout << "Row: " << row << std::endl;
   std::cout << "Column: " << column << std::endl;
-  _board[row][column] = mark;
+  _board[row][column] = Mark::CROSS;
 }
 
 std::pair<int, int> Tictactoe::getRowAndColumn() {
@@ -185,21 +185,25 @@ Tictactoe::Mark Tictactoe::getPlayerMark(const std::string& player) {
             << ". You can select either O or a X: ";
   Mark mark;
   while (mark == Mark::BLANK) {
-    char val;
+    std::cout << "Enter mark: ";
+
+    std::string val;
     std::cin >> val;
     mark = val;
   }
   return mark;
 }
 
-bool Tictactoe::isGameOver() {
+std::pair<bool, bool> Tictactoe::isGameOver() {
+  bool win = false;
+  bool draw = false;
+
   if (isAWin()) {
-    return true;
+    win = true;
+  } else if (isADraw()) {
+    draw = true;
   }
-  if (isADraw()) {
-    return true;
-  }
-  return false;
+  return std::make_pair(win, draw);
 }
 
 bool Tictactoe::isADraw() {
@@ -252,28 +256,24 @@ bool Tictactoe::isAWinForDiagonal() {
 }
 
 bool Tictactoe::isAWinForALine(int row, int column, int dRow, int dColumn) {
-  Mark mark = _board[row][column];
+  Mark mark = _currentMark;
   int count = 0;
   while (row < _row && column < _column && count < _k) {
-    if (mark != Mark::BLANK && mark == _board[row][column]) {
-      ++count;
-    } else {
-      count = 1;
-      mark = _board[row][column];
+    if (mark != _board[row][column]) {
+      break;
     }
+    ++count;
     row += dRow;
     column += dColumn;
   }
   if (count >= _k) {
-    _winnerMark = mark;
     return true;
   }
   return false;
 }
 
-void Tictactoe::getPlayerMove(const std::string& player,
-                              const Mark& mark) {
-  std::cout << "Player " << player << " move\n";
+void Tictactoe::getPlayerMove(const Player& player) {
+  std::cout << "Player " << player.first << " move\n";
 
   int row = -1;
   int column = -1;
@@ -287,13 +287,20 @@ void Tictactoe::getPlayerMove(const std::string& player,
     validMove = isValidMove(row, column);
   }
   
-  _board[row][column] = mark;
+  _board[row][column] = player.second;
 }
 
-void Tictactoe::report(const std::string& winner) {
-  if (winner.empty()) {
+void Tictactoe::report(std::pair<bool, bool>& status,
+                       const Player& player1,
+                       const Player& player2) {
+  if (status.second) {
     std::cout << "It's a draw\n";
   } else {
-    std::cout << "The winner is " << winner << std::endl;
+    std::cout << "The winner is ";
+    if (_currentMark == player1.second) {
+      std::cout << player1.first << std::endl;
+    } else {
+      std::cout << player2.first << std::endl;
+    }
   }
 }
