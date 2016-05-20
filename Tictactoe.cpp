@@ -278,11 +278,14 @@ void Tictactoe::getPlayerMove(const Player& player) {
   int row = -1;
   int column = -1;
   bool validMove = false;
+  std::string val;
   while (!validMove){
     std::cout << "Enter row: ";
-    std::cin >> row;
+    std::cin >> val;
+    row = std::stoi(val);
     std::cout << "Enter column: ";
-    std::cin >> column;
+    std::cin >> val;
+    column = std::stoi(val);
 
     validMove = isValidMove(row, column);
   }
